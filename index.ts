@@ -1,56 +1,57 @@
-const readFromTextInput = (): string => {
+const readFromTextInput = (input: string): string => {
+  // console.log(`readFromTextInput('${input}')`);
   // pseudocode
-  return "abcde "
+  return input;
 }
-const readFromNumberInput = (): number => {
+const readFromNumberInput = (input: number = 15): number => {
+  // console.log(`readFromNumberInput('${input}')`);
   // pseudocode
-  return 13
+  return input;
 }
 const addSignature = (input: string): string => {
-  return input + '\n\nHello AI.';
+  const signature:string = input + '\nHello AI.';
+  // console.log(`addSignature('${signature}')`);
+  return signature;
 };
 const fitInSMS = (input: string, limit: number = 160): boolean => {
-  return input.length <= limit;
+  let fits:boolean = input.length <= limit
+  // console.log(`fitInSMS('${input}', ${limit}) : (${input.length} <= ${limit}) => ${fits}`);
+  return fits;
 };
 
 /**
- * This method creates a pipe composition and the
- * resulting object is yet tighly coupled to the 
- * length limit scenario required when validating
- * whether or not a message fits in a SMS message.
- * It requires further enhancement for accepting
- * generic parameters, and being able to provide
- * different results other than boolean.
+ * I have created a 'pipe' function for solviing the 
+ * problem, mainly because the resolving function requires
+ * a structure that is distinct from other functions 
+ * composing the chain and, at the moment, typescript
+ * doesn't support adding ...rest parameters anywhere 
+ * else other than the last position (which is a limitation
+ * shared by other languages such as C#). This is why I had 
+ * to rearrange the invocation and use it as such. Should
+ * the return type be the same as the chain (string) insteead 
+ * of boolean, I would have been able to go with the initial
+ * left-to-right solution (compose).
  * 
- * @param fns The fuctions composing the pipeline 
- * of processing applied to the input parameters,
- * applied from left to right.
- * e.g: compose(fn1, fn2, fn3, ..., fnn)
+ * @param fn1 The function responsible for resolving
+ * the entire pipeline of commands/functions whose
+ * arity is different from those of the functions
+ * composing the entire chain. 
+ * @param fns The collection of functions invoked in a 
+ * chain 
  * @return Whether or not the pipeline is valid or
  * not, assuming the specific scenario in which the 
  * very last function is a pipeline validation method.
  */
-const compose = (...fns:Array<(ai:string, al?:number) => string | boolean>):any => {
-  return (...initialArgs:any):boolean => {
-    return fns.reduce((prev, next, i, source) => {
-      return i === source.length - 1 && initialArgs[1] !== undefined ? 
-        next(prev, initialArgs[1]) :
-        next(prev);
-    }, initialArgs);
-  }
-};
+const pipe = <R, F>(
+    fn1: (a: R) => F, 
+    ...fns: Array<(a: R) => R>
+  ) : (a: R) => F => 
+    fns.reduce((prev, next) => 
+      (value: R) => 
+        prev(next(value)), 
+          fn1);
 
-// ## 1.1. Success case
-// ## TS Transpiler should understand the return type of compose function
-const canSMS = compose(readFromTextInput, addSignature, fitInSMS);
-// const canSMS = compose(readFromNumberInput, addSignature, fitInSMS);
+const canSMS = pipe(fitInSMS, addSignature, readFromTextInput, /*readFromNumberInput*/);
 
-const result = canSMS("Some SMS message used for tests");
-// ## 1.2. Fail case
-// ## TS Transpiler should validate types of parameters passed 
-// ## from one function to another, e.g. This scenario should fail, 
-// ## because readFromNumberInput returns a number, however 
-// ## addSignature accepts string.
-// const result = canSMS("Some SMS message used for tests", 16);
-
-console.log(result);
+let longMessage = "Some SMS message used for tests.";
+console.log(canSMS(longMessage));
