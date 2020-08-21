@@ -15,10 +15,9 @@ const addSignature = (input: string): string => {
   // console.log(`addSignature('${signature}')`);
   return signature;
 };
-const fitInSMS = (input: string, limit: number = 160): boolean => {
-  let fits:boolean = input.length <= limit
+const fitInSMS = (input: string, limit: number = 30): boolean => {
   // console.log(`fitInSMS('${input}', ${limit}) : (${input.length} <= ${limit}) => ${fits}`);
-  return fits;
+  return input.length <= limit;
 };
 
 /**
@@ -58,11 +57,21 @@ const P: Pipe = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
 const C: Compose = (...fns) => x => fns.reduce((v, f) => f(v), x);
 
 const test01 = pipe(fitInSMS, addSignature, readFromTextInput, /*readFromNumberInput*/);
-// Right-to-left pipeline
-const test02 = P(fitInSMS, addSignature, readFromTextInput);
-// Left-to-right composition
-const test03 = C(readFromTextInput, addSignature, fitInSMS);
+// Not using types.d.ts
+console.log(test01("Some random SMS")); // 15 Chars + Signature = -30 [TRUE] 
+console.log(test01("Some random SMS message")); // 24 Chars + Signature = +30 [FALSE]
+console.log(test01("Some random SMS message used for tests")); // +30 Chars [FALSE]
 
-console.log(test01("Some random SMS message used for tests"));
-console.log(test02("Some random SMS message used for tests"));
-console.log(test03("Some random SMS message used for tests"));
+// Right-to-left pipeline
+const test02 = P(fitInSMS, addSignature, readFromTextInput, /*readFromNumberInput*/);
+// PIPE: Using types.d.ts
+console.log(test02("Some random SMS")); // 15 Chars + Signature = -30 [TRUE] 
+console.log(test02("Some random SMS message")); // 24 Chars + Signature = +30 [FALSE]
+console.log(test02("Some random SMS message used for tests")); // +30 Chars [FALSE]
+
+// Left-to-right composition
+const test03 = C(/*readFromNumberInput ,*/ readFromTextInput, addSignature, fitInSMS);
+// COMPOSE: Using types.d.ts
+console.log(test03("Some random SMS")); // 15 Chars + Signature = -30 [TRUE] 
+console.log(test03("Some random SMS message")); // 24 Chars + Signature = +30 [FALSE]
+console.log(test03("Some random SMS message used for tests")); // +30 Chars [FALSE]
