@@ -57,13 +57,13 @@ type UnariesToPiped<F extends Unary[]> = {
 type Composable<F extends Unary[]> = UnariesToComposed<F> extends F ? F : never
 
 /**
- * The type for the pipe function
- * @example const pipe: Pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
+ * The type for the compose function
+ * @example const compose: Compose = (...fns) => x => fns.reduce((v, f) => f(v), x);
  */
 export type Compose = <F extends Unary[]>(...funcs: UnariesToComposed<F>) => (i: ParameterUnary<F[PrevN<F["length"]>]>) => ReturnType<F[0]>
 
 /**
- * The type for the compose function
- * @example const compose: Compose = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
+ * The type for the pipe function
+ * @example const pipe: Pipe = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
  */
 export type Pipe = <F extends Unary[]>(...funcs: UnariesToPiped<F>) => (i: ParameterUnary<F[0]>) => ReturnType<F[PrevN<F["length"]>]>
