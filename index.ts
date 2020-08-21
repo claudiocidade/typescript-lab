@@ -1,3 +1,5 @@
+import { Pipe, Compose } from "./types";
+
 const readFromTextInput = (input: string): string => {
   // console.log(`readFromTextInput('${input}')`);
   // pseudocode
@@ -51,7 +53,16 @@ const pipe = <R, F>(
         prev(next(value)), 
           fn1);
 
-const canSMS = pipe(fitInSMS, addSignature, readFromTextInput, /*readFromNumberInput*/);
+const P: Pipe = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
 
-let longMessage = "Some SMS message used for tests.";
-console.log(canSMS(longMessage));
+const C: Compose = (...fns) => x => fns.reduce((v, f) => f(v), x);
+
+const test01 = pipe(fitInSMS, addSignature, readFromTextInput, /*readFromNumberInput*/);
+// Right-to-left pipeline
+const test02 = P(fitInSMS, addSignature, readFromTextInput);
+// Left-to-right composition
+const test03 = C(readFromTextInput, addSignature, fitInSMS);
+
+console.log(test01("Some random SMS message used for tests"));
+console.log(test02("Some random SMS message used for tests"));
+console.log(test03("Some random SMS message used for tests"));
